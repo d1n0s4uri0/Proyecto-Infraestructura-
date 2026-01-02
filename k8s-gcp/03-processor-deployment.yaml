@@ -1,0 +1,67 @@
+# Deployment para el servicio Processor (GCP)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: processor-deployment
+  namespace: news-analysis
+  labels:
+    app: news-analysis
+    component: processor
+spec:
+  replicas: 2  # Número de réplicas para paralelismo
+  selector:
+    matchLabels:
+      app: news-analysis
+      component: processor
+  template:
+    metadata:
+      labels:
+        app: news-analysis
+        component: processor
+    spec:
+      containers:
+      - name: processor
+        image: gcr.io/PROJECT_ID/news-analysis-processor:1.0.0
+        imagePullPolicy: Always
+        
+        # Variables de entorno desde ConfigMap
+        envFrom:
+        - configMapRef:
+            name: news-analysis-config
+        
+        # Variables específicas
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        
+        # Recursos
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        
+        # Volúmenes montados
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+        
+        # Comando de ejecución
+        command: ["python", "-m", "processor.main"]
+        
+      # Volúmenes
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: news-data-pvc
+      
+      # Restart policy
+      restartPolicy: Always

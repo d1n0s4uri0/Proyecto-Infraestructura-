@@ -1,0 +1,14 @@
+{
+  "ultima_actualizacion": "2026-01-02T13:28:17.492645",
+  "fecha_inicio": "2025-12-03T13:28:13.852386",
+  "fecha_fin": "2026-01-02T13:28:13.852386",
+  "registros_totales": 31,
+  "columnas": [
+    "date",
+    "colcap_open",
+    "colcap_high",
+    "colcap_low",
+    "colcap_close",
+    "colcap_volume"
+  ]
+}

@@ -1,0 +1,87 @@
+# Deployment para el servicio Analyzer (API) - GCP
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analyzer-deployment
+  namespace: news-analysis
+  labels:
+    app: news-analysis
+    component: analyzer
+spec:
+  replicas: 3  # Múltiples réplicas para alta disponibilidad
+  selector:
+    matchLabels:
+      app: news-analysis
+      component: analyzer
+  template:
+    metadata:
+      labels:
+        app: news-analysis
+        component: analyzer
+    spec:
+      containers:
+      - name: analyzer
+        image: gcr.io/PROJECT_ID/news-analysis-analyzer:1.0.0
+        imagePullPolicy: Always
+        
+        # Puerto expuesto
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        
+        # Variables de entorno
+        envFrom:
+        - configMapRef:
+            name: news-analysis-config
+        
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /v1/health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /v1/health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        # Recursos
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        
+        # Volúmenes
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+          readOnly: true  # Solo lectura para el analyzer
+        
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: news-data-pvc
+      
+      restartPolicy: Always

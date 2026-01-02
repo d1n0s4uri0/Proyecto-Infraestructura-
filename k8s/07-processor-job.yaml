@@ -1,0 +1,63 @@
+# Job para ejecutar el Processor de forma batch
+# Útil para procesamiento periódico de datos
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: processor-job
+  namespace: news-analysis
+  labels:
+    app: news-analysis
+    component: processor
+spec:
+  # Paralelismo: ejecutar 4 pods simultáneamente
+  parallelism: 4
+  # Completions: total de tareas a completar
+  completions: 4
+  # Tiempo máximo de ejecución
+  activeDeadlineSeconds: 3600  # 1 hora
+  # Política de reintentos
+  backoffLimit: 3
+  
+  template:
+    metadata:
+      labels:
+        app: news-analysis
+        component: processor-job
+    spec:
+      restartPolicy: OnFailure
+      
+      containers:
+      - name: processor
+        image: your-registry.io/news-analysis-processor:1.0.0
+        imagePullPolicy: Always
+        
+        envFrom:
+        - configMapRef:
+            name: news-analysis-config
+        
+        env:
+        - name: JOB_COMPLETION_INDEX
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index']
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: news-data-pvc

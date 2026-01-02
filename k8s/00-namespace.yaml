@@ -1,0 +1,9 @@
+# Namespace para aislar recursos del proyecto
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: news-analysis
+  labels:
+    app: news-analysis
+    environment: production
+    project: infraestructuras-paralelas

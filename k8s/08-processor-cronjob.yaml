@@ -1,0 +1,68 @@
+# CronJob para ejecutar el Processor periódicamente
+# Por ejemplo: todos los días a las 2 AM
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: processor-cronjob
+  namespace: news-analysis
+  labels:
+    app: news-analysis
+    component: processor
+spec:
+  # Ejecutar todos los días a las 2 AM
+  schedule: "0 2 * * *"
+  # Timezone (requiere Kubernetes 1.24+)
+  timeZone: "America/Bogota"
+  # Política de concurrencia
+  concurrencyPolicy: Forbid  # No permitir ejecuciones simultáneas
+  # Historial de jobs
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  # Deadline
+  startingDeadlineSeconds: 300  # Si no inicia en 5 min, cancelar
+  
+  jobTemplate:
+    spec:
+      parallelism: 4
+      completions: 4
+      backoffLimit: 2
+      
+      template:
+        metadata:
+          labels:
+            app: news-analysis
+            component: processor-cronjob
+        spec:
+          restartPolicy: OnFailure
+          
+          containers:
+          - name: processor
+            image: your-registry.io/news-analysis-processor:1.0.0
+            imagePullPolicy: Always
+            
+            envFrom:
+            - configMapRef:
+                name: news-analysis-config
+            
+            env:
+            - name: CRON_EXECUTION
+              value: "true"
+            - name: EXECUTION_TIME
+              value: "$(date +%Y-%m-%d_%H-%M-%S)"
+            
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "500m"
+              limits:
+                memory: "1Gi"
+                cpu: "1000m"
+            
+            volumeMounts:
+            - name: data-volume
+              mountPath: /data
+          
+          volumes:
+          - name: data-volume
+            persistentVolumeClaim:
+              claimName: news-data-pvc

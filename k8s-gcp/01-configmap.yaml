@@ -1,0 +1,28 @@
+# ConfigMap para configuración de la aplicación
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: news-analysis-config
+  namespace: news-analysis
+  labels:
+    app: news-analysis
+data:
+  # Configuración del Processor
+  PROCESSOR_LOG_LEVEL: "INFO"
+  PROCESSOR_WORKERS: "4"
+  KEYWORDS: "inflacion,dolar,economia,colcap,crisis,bolsa,pib"
+  
+  # Configuración del Analyzer
+  ANALYZER_LOG_LEVEL: "INFO"
+  API_HOST: "0.0.0.0"
+  API_PORT: "8000"
+  
+  # Paths compartidos
+  RAW_DATA_PATH: "/data/raw"
+  PROCESSED_DATA_PATH: "/data/processed"
+  AGGREGATED_DATA_PATH: "/data/aggregated"
+  INDICATORS_PATH: "/data/indicators"
+  
+  # Configuración de procesamiento
+  BATCH_SIZE: "1000"
+  CHUNK_SIZE: "500"

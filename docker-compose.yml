@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  acquirer:
+    build:
+      context: .
+      dockerfile: data_acquirer.Dockerfile
+    container_name: news-acquirer
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PYTHONUNBUFFERED=1
+      - COLCAP_DAYS=30
+      - COLCAP_METHOD=auto
+    networks:
+      - news-network
+
+  processor:
+    build:
+      context: .
+      dockerfile: processor.Dockerfile
+    container_name: news-processor
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PROCESSOR_WORKERS=4
+    networks:
+      - news-network
+    depends_on:
+      acquirer:
+        condition: service_completed_successfully
+
+  analyzer:
+    build:
+      context: .
+      dockerfile: analyzer.Dockerfile
+    container_name: news-analyzer
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PYTHONUNBUFFERED=1
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    networks:
+      - news-network
+    depends_on:
+      processor:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: news-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - news-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: news-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - news-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+networks:
+  news-network:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data:

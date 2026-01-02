@@ -1,0 +1,80 @@
+# CronJob para actualizar datos COLCAP diariamente
+# Se ejecuta todos los días a las 7 PM (después del cierre del mercado)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: colcap-updater
+  namespace: news-analysis
+  labels:
+    app: news-analysis
+    component: colcap-updater
+spec:
+  # Schedule: todos los días a las 19:00 (7 PM) hora Colombia
+  # Formato: minuto hora día mes día-semana
+  schedule: "0 19 * * *"
+  
+  # Timezone
+  timeZone: "America/Bogota"
+  
+  # Políticas
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid  # No permitir ejecuciones concurrentes
+  
+  jobTemplate:
+    metadata:
+      labels:
+        app: news-analysis
+        component: colcap-updater
+    spec:
+      # Tiempo máximo de ejecución: 10 minutos
+      activeDeadlineSeconds: 600
+      
+      # Política de reintento
+      backoffLimit: 3
+      
+      template:
+        metadata:
+          labels:
+            app: news-analysis
+            component: colcap-updater
+        spec:
+          containers:
+          - name: colcap-fetcher
+            image: your-registry.io/news-analysis-acquirer:1.0.0
+            imagePullPolicy: Always
+            
+            # Comando específico para COLCAP
+            command: ["python", "data_acquirer/colcap_fetcher.py"]
+            
+            # Variables de entorno
+            env:
+            - name: COLCAP_DAYS
+              value: "30"  # Descargar últimos 30 días
+            - name: COLCAP_METHOD
+              value: "auto"  # Intentar todos los métodos
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            
+            # Recursos
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "250m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+            
+            # Volúmenes
+            volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+          
+          # Política de reinicio
+          restartPolicy: OnFailure
+          
+          # Volúmenes
+          volumes:
+          - name: data-volume
+            persistentVolumeClaim:
+              claimName: news-data-pvc

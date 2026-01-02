@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: acquirer-cronjob
+  namespace: news-analysis
+spec:
+  schedule: "0 2 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: acquirer
+            image: your-registry.io/news-analysis-acquirer:1.0.0
+            env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+          restartPolicy: OnFailure
+          volumes:
+          - name: data-volume
+            persistentVolumeClaim:
+              claimName: news-data-pvc

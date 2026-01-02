@@ -1,0 +1,62 @@
+# Job manual para descargar datos COLCAP inmediatamente
+# Ejecutar con: kubectl apply -f k8s/12-colcap-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: colcap-job
+  namespace: news-analysis
+  labels:
+    app: news-analysis
+    component: colcap-updater
+spec:
+  # Tiempo máximo de ejecución: 10 minutos
+  activeDeadlineSeconds: 600
+  
+  # Política de reintento
+  backoffLimit: 3
+  
+  template:
+    metadata:
+      labels:
+        app: news-analysis
+        component: colcap-updater
+    spec:
+      containers:
+      - name: colcap-fetcher
+        image: your-registry.io/news-analysis-acquirer:1.0.0
+        imagePullPolicy: Always
+        
+        # Comando específico para COLCAP
+        command: ["python", "data_acquirer/colcap_fetcher.py"]
+        
+        # Variables de entorno
+        env:
+        - name: COLCAP_DAYS
+          value: "30"  # Descargar últimos 30 días
+        - name: COLCAP_METHOD
+          value: "auto"  # Intentar todos los métodos
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        
+        # Recursos
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        
+        # Volúmenes
+        volumeMounts:
+        - name: data-volume
+          mountPath: /app/data
+      
+      # Política de reinicio
+      restartPolicy: OnFailure
+      
+      # Volúmenes
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: news-data-pvc

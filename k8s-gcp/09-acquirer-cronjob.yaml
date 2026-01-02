@@ -1,0 +1,47 @@
+# CronJob para adquirir noticias diariamente (GCP)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: acquirer-cronjob
+  namespace: news-analysis
+  labels:
+    app: news-analysis
+    component: acquirer
+spec:
+  schedule: "0 2 * * *"  # Diariamente a las 2 AM
+  timeZone: "America/Bogota"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    metadata:
+      labels:
+        app: news-analysis
+        component: acquirer
+    spec:
+      activeDeadlineSeconds: 1800  # Timeout de 30 minutos
+      backoffLimit: 3
+      template:
+        spec:
+          containers:
+          - name: acquirer
+            image: gcr.io/PROJECT_ID/news-analysis-acquirer:1.0.0
+            imagePullPolicy: Always
+            env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            resources:
+              requests:
+                memory: "256Mi"
+                cpu: "250m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+            volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+          restartPolicy: OnFailure
+          volumes:
+          - name: data-volume
+            persistentVolumeClaim:
+              claimName: news-data-pvc

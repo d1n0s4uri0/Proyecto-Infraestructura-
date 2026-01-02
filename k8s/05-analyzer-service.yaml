@@ -1,0 +1,22 @@
+# Service para exponer el Analyzer API
+apiVersion: v1
+kind: Service
+metadata:
+  name: analyzer-service
+  namespace: news-analysis
+  labels:
+    app: news-analysis
+    component: analyzer
+spec:
+  type: LoadBalancer  # Usa LoadBalancer para exponer externamente
+  # Si prefieres usar NodePort localmente, cambia a: type: NodePort
+  selector:
+    app: news-analysis
+    component: analyzer
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80        # Puerto externo
+    targetPort: 8000  # Puerto del contenedor
+    # nodePort: 30080  # Descomentar si usas NodePort
+  sessionAffinity: ClientIP  # Mantiene la sesión con el mismo pod

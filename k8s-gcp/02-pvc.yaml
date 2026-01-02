@@ -1,0 +1,15 @@
+# PersistentVolumeClaim para almacenar datos persistentes (GKE)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: news-data-pvc
+  namespace: news-analysis
+  labels:
+    app: news-analysis
+spec:
+  accessModes:
+    - ReadWriteMany  # Permite lectura/escritura desde múltiples pods
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard-rwo  # Storage class para GKE

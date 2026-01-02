@@ -1,0 +1,42 @@
+# Configuración de Prometheus para monitoreo
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'news-analysis'
+    environment: 'production'
+
+# Configuración de alertas (opcional)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Reglas de alertas
+rule_files:
+  # - "alerts.yml"
+
+# Configuración de scraping
+scrape_configs:
+  # Monitoreo de Prometheus mismo
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Monitoreo del Analyzer API
+  - job_name: 'analyzer-api'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['analyzer:8000']
+    scrape_interval: 10s
+
+  # Monitoreo del Processor
+  - job_name: 'processor'
+    static_configs:
+      - targets: ['processor:8000']
+    scrape_interval: 30s
+
+  # Docker metrics (si usas cAdvisor)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
