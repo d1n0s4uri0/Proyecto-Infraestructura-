@@ -5,7 +5,7 @@ Desarrollar un prototipo funcional de software distribuido que procesa y analiza
 
 ### 1.2 Tecnologías Utilizadas
 - **Contenedores**: Docker, Docker Compose
-- **Orquestación**: Kubernetes (GKE/EKS/AKS)
+- **Orquestación**: Kubernetes (GKE)
 - **Lenguaje**: Python 3.11
 - **Frameworks**: FastAPI, pandas, matplotlib
 - **Procesamiento Paralelo**: multiprocessing
