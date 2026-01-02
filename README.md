@@ -21,13 +21,13 @@ Desarrollar un prototipo funcional de software distribuido que procesa y analiza
 ## Arquitectura del Sistema
 
 ### Diagrama de Arquitectura
-
+```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        KUBERNETES CLUSTER                       │
 │                                                                 │
 │  ┌────────────────┐  ┌────────────────┐  ┌─────────────────┐    │
 │  │ Data Acquirer  │  │   Processor    │  │    Analyzer     │    │
-│  │   (CronJob)    │─▶│  (Deployment)  │─▶│  (Deployment)  │    │
+│  │   (CronJob)    │─▶│     (job)     │─▶│      (job)      │    │
 │  │                │  │                │  │                 │    │
 │  │ • RSS Scraper  │  │ • Multiprocess │  │ • Correlations  │    │
 │  │ • COLCAP Fetch │  │ • 4 Workers    │  │ • API REST      │    │
@@ -47,9 +47,9 @@ Desarrollar un prototipo funcional de software distribuido que procesa y analiza
                         │ Usuarios │
                         │   API    │
                         └──────────┘
-
-### 2.2 Flujo de Datos
-
+```
+### Flujo de Datos
+```
 1. ADQUISICIÓN
    ├─ RSS Scraper → Descarga noticias (últimos 7 días)
    └─ COLCAP Fetcher → Descarga datos bursátiles (últimos 30 días)
@@ -74,7 +74,7 @@ Desarrollar un prototipo funcional de software distribuido que procesa y analiza
       ├─ /v1/metrics
       ├─ /v1/daily
       └─ /v1/plots
-
+```
 ## Componentes del Sistema
 
 ### Data Acquirer
@@ -175,6 +175,7 @@ Pool de Workers (4)
 ├─ Worker 2
 ├─ Worker 3
 └─ Worker 4
+```
 
 Cada worker:
 1. Lee chunk de documentos
@@ -214,6 +215,7 @@ Jobs (manuales):
 ├─ acquirer-job
 ├─ processor-job
 └─ colcap-job
+```
 
 ## Resultados y Análisis
 
