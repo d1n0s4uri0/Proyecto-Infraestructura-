@@ -9,7 +9,6 @@ Desarrollar un prototipo funcional de software distribuido que procesa y analiza
 - **Lenguaje**: Python 3.11
 - **Frameworks**: FastAPI, pandas, matplotlib
 - **Procesamiento Paralelo**: multiprocessing
-- **Monitoreo**: Prometheus, Grafana
 
 ### Logros Principales
 - ✅ Sistema distribuido con 3 microservicios
